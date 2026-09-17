@@ -1,9 +1,21 @@
 <?php
 
+session_start();
+
+/* ================= ADMIN SECURITY ================= */
+
+if (
+    !isset($_SESSION["admin_logged_in"]) ||
+    $_SESSION["admin_logged_in"] !== true
+) {
+    header("Location: login.php");
+    exit();
+}
+
 include "../config.php";
 
 
-/* Get Events */
+/* ================= GET EVENTS ================= */
 
 $sql = "SELECT * FROM events ORDER BY date ASC";
 
@@ -11,380 +23,620 @@ $result = $conn->query($sql);
 
 ?>
 
-
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
+<title>Manage Events | EventHub</title>
 
-    <title>
-        Manage Events - EventHub
-    </title>
+<style>
 
+/* ================= GLOBAL ================= */
 
-    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
 
-        * {
+body {
+    background: #f5f7fc;
+    color: #172033;
+}
 
-            margin: 0;
 
-            padding: 0;
+/* ================= SIDEBAR ================= */
 
-            box-sizing: border-box;
+.sidebar {
 
-            font-family: Arial, sans-serif;
+    position: fixed;
 
-        }
+    left: 0;
+    top: 0;
 
+    width: 245px;
+    height: 100vh;
 
-        body {
+    background:
+        linear-gradient(
+            180deg,
+            #10172d 0%,
+            #121a32 55%,
+            #0e162b 100%
+        );
 
-            background: #f4f6f9;
+    color: white;
 
-        }
+    padding: 25px 15px;
 
+    box-shadow:
+        8px 0 30px rgba(18,25,55,0.08);
 
-        /* ================= SIDEBAR ================= */
+    z-index: 100;
+}
 
-        .sidebar {
 
-            position: fixed;
+/* LOGO */
 
-            left: 0;
+.logo-area {
 
-            top: 0;
+    display: flex;
 
-            width: 240px;
+    align-items: center;
 
-            height: 100vh;
+    gap: 12px;
 
-            background: #111827;
+    padding: 4px 12px 28px;
 
-            padding: 25px 15px;
+    border-bottom:
+        1px solid rgba(255,255,255,0.07);
 
-        }
+    margin-bottom: 28px;
+}
 
+.logo-icon {
 
-        .logo {
+    width: 43px;
+    height: 43px;
 
-            color: white;
+    border-radius: 12px;
 
-            text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-            font-size: 25px;
+    background:
+        linear-gradient(
+            135deg,
+            #7167f5,
+            #9d45ef
+        );
 
-            font-weight: bold;
+    font-size: 22px;
 
-            margin-bottom: 40px;
+    box-shadow:
+        0 8px 20px rgba(124,80,245,0.35);
+}
 
-        }
+.logo-text h2 {
 
+    font-size: 22px;
 
-        .logo span {
+    line-height: 22px;
 
-            color: #6366f1;
+    font-weight: 700;
+}
 
-        }
+.logo-text h2 span {
 
+    color: #8c5cf5;
+}
 
-        .sidebar a {
+.logo-text small {
 
-            display: block;
+    display: block;
 
-            color: #d1d5db;
+    margin-top: 4px;
 
-            text-decoration: none;
+    color: #8f98ae;
 
-            padding: 14px 15px;
+    font-size: 11px;
+}
 
-            margin: 8px 0;
 
-            border-radius: 8px;
+/* MENU TITLE */
 
-            transition: 0.3s;
+.menu-title {
 
-        }
+    color: #78839b;
 
+    font-size: 10px;
 
-        .sidebar a:hover {
+    font-weight: 700;
 
-            background: #6366f1;
+    letter-spacing: 1.5px;
 
-            color: white;
+    padding: 0 12px;
 
-        }
+    margin-bottom: 10px;
+}
 
 
-        /* ================= MAIN ================= */
+/* SIDEBAR LINKS */
 
-        .main {
+.sidebar a {
 
-            margin-left: 240px;
+    display: flex;
 
-            padding: 30px;
+    align-items: center;
 
-        }
+    gap: 13px;
 
+    color: #b8c0d0;
 
-        /* ================= TOPBAR ================= */
+    text-decoration: none;
 
-        .topbar {
+    padding: 13px 14px;
 
-            background: white;
+    margin: 5px 0;
 
-            padding: 25px;
+    border-radius: 10px;
 
-            border-radius: 12px;
+    font-size: 13.5px;
 
-            margin-bottom: 25px;
+    font-weight: 500;
 
-            box-shadow:
-                0 3px 10px rgba(0,0,0,0.08);
+    transition: 0.25s;
+}
 
-        }
+.sidebar a:hover {
 
+    color: white;
 
-        .topbar h1 {
+    background:
+        rgba(255,255,255,0.06);
 
-            color: #111827;
+    transform: translateX(2px);
+}
 
-            margin-bottom: 8px;
+.sidebar a.active {
 
-        }
+    color: white;
 
+    background:
+        linear-gradient(
+            135deg,
+            #536df5,
+            #7939ed
+        );
 
-        .topbar p {
+    box-shadow:
+        0 8px 20px rgba(90,66,235,0.30);
+}
 
-            color: #6b7280;
+.nav-icon {
 
-        }
+    width: 20px;
 
+    text-align: center;
 
-        /* ================= ADD BUTTON ================= */
+    font-size: 17px;
+}
 
-        .add-btn {
 
-            display: inline-block;
+/* ================= MAIN ================= */
 
-            margin-bottom: 20px;
+.main {
 
-            background: #16a34a;
+    margin-left: 245px;
 
-            color: white;
+    min-height: 100vh;
 
-            padding: 12px 18px;
+    padding: 0 28px 35px;
+}
 
-            border-radius: 8px;
 
-            text-decoration: none;
+/* ================= TOP HEADER ================= */
 
-            font-weight: bold;
+.top-header {
 
-        }
+    height: 70px;
 
+    display: flex;
 
-        .add-btn:hover {
+    align-items: center;
 
-            background: #15803d;
+    justify-content: space-between;
 
-        }
+    border-bottom:
+        1px solid #e9ecf4;
 
+    margin-bottom: 20px;
+}
 
-        /* ================= TABLE ================= */
+.header-title h1 {
 
-        .table-box {
+    font-size: 25px;
 
-            background: white;
+    color: #182033;
+}
 
-            padding: 20px;
+.header-title p {
 
-            border-radius: 14px;
+    margin-top: 4px;
 
-            box-shadow:
-                0 3px 10px rgba(0,0,0,0.08);
+    color: #8a92a5;
 
-            overflow-x: auto;
+    font-size: 12px;
+}
 
-        }
 
+/* ================= ADD BUTTON ================= */
 
-        table {
+.add-btn {
 
-            width: 100%;
+    display: inline-flex;
 
-            border-collapse: collapse;
+    align-items: center;
 
-            min-width: 900px;
+    gap: 7px;
 
-        }
+    text-decoration: none;
 
+    color: white;
 
-        th {
+    background:
+        linear-gradient(
+            135deg,
+            #536df5,
+            #7939ed
+        );
 
-            background: #111827;
+    padding: 12px 18px;
 
-            color: white;
+    border-radius: 9px;
 
-            padding: 14px;
+    font-size: 13px;
 
-            text-align: left;
+    font-weight: 600;
 
-        }
+    margin-bottom: 18px;
 
+    box-shadow:
+        0 7px 18px rgba(90,66,235,0.22);
 
-        td {
+    transition: 0.25s;
+}
 
-            padding: 14px;
+.add-btn:hover {
 
-            border-bottom:
-                1px solid #e5e7eb;
+    transform: translateY(-2px);
 
-            color: #374151;
+    box-shadow:
+        0 10px 22px rgba(90,66,235,0.30);
+}
 
-        }
 
+/* ================= TABLE BOX ================= */
 
-        tr:hover {
+.table-box {
 
-            background: #f9fafb;
+    background: white;
 
-        }
+    border:
+        1px solid #edf0f6;
 
+    border-radius: 15px;
 
-        /* ================= STATUS ================= */
+    padding: 20px;
 
-        .status {
+    box-shadow:
+        0 5px 20px rgba(28,40,80,0.05);
 
-            display: inline-block;
+    overflow-x: auto;
+}
 
-            padding: 6px 12px;
 
-            border-radius: 20px;
+/* ================= TABLE ================= */
 
-            font-size: 13px;
+table {
 
-            font-weight: bold;
+    width: 100%;
 
-        }
+    border-collapse: collapse;
 
+    min-width: 950px;
+}
 
-        .active {
+thead th {
 
-            background: #dcfce7;
+    background: #111827;
 
-            color: #166534;
+    color: white;
 
-        }
+    padding: 14px;
 
+    text-align: left;
 
-        .inactive {
+    font-size: 12px;
 
-            background: #fee2e2;
+    font-weight: 600;
+}
 
-            color: #991b1b;
+thead th:first-child {
 
-        }
+    border-radius: 8px 0 0 8px;
+}
 
+thead th:last-child {
 
-        /* ================= ACTION BUTTONS ================= */
+    border-radius: 0 8px 8px 0;
+}
 
-        .action {
+tbody td {
 
-            white-space: nowrap;
+    padding: 14px;
 
-        }
+    border-bottom:
+        1px solid #e8ebf2;
 
+    color: #4b5563;
 
-        .edit {
+    font-size: 13px;
 
-            display: inline-block;
+    vertical-align: middle;
+}
 
-            background: #2563eb;
+tbody tr {
 
-            color: white;
+    transition: 0.2s;
+}
 
-            padding: 7px 11px;
+tbody tr:hover {
 
-            border-radius: 6px;
+    background: #f8f9ff;
+}
 
-            text-decoration: none;
 
-            margin-right: 5px;
+/* ================= ID ================= */
 
-        }
+.event-id {
 
+    color: #6841df;
 
-        .edit:hover {
+    font-weight: 700;
+}
 
-            background: #1d4ed8;
 
-        }
+/* ================= TITLE ================= */
 
+.event-title {
 
-        .delete {
+    color: #172033;
 
-            display: inline-block;
+    font-weight: 600;
+}
 
-            background: #dc2626;
 
-            color: white;
+/* ================= DESCRIPTION ================= */
 
-            padding: 7px 11px;
+.description {
 
-            border-radius: 6px;
+    max-width: 250px;
 
-            text-decoration: none;
+    color: #7b8498;
 
-        }
+    line-height: 1.5;
+}
 
 
-        .delete:hover {
+/* ================= DATE ================= */
 
-            background: #b91c1c;
+.event-date {
 
-        }
+    white-space: nowrap;
 
+    color: #4b5563;
 
-        /* ================= NO DATA ================= */
+    font-weight: 500;
+}
 
-        .no-data {
 
-            text-align: center;
+/* ================= LOCATION ================= */
 
-            padding: 35px;
+.location {
 
-            color: #6b7280;
+    max-width: 180px;
 
-        }
+    color: #596274;
+}
 
 
-        /* ================= RESPONSIVE ================= */
+/* ================= IMAGE ================= */
 
-        @media (max-width: 800px) {
+.event-image {
 
-            .sidebar {
+    width: 60px;
 
-                width: 190px;
+    height: 45px;
 
-            }
+    object-fit: cover;
 
+    border-radius: 7px;
 
-            .main {
+    border: 1px solid #e5e7eb;
+}
 
-                margin-left: 190px;
 
-            }
+/* ================= STATUS ================= */
 
-        }
+.status {
 
-    </style>
+    display: inline-block;
+
+    padding: 6px 11px;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+
+    font-weight: 700;
+}
+
+.active {
+
+    background: #dcfce7;
+
+    color: #166534;
+}
+
+.inactive {
+
+    background: #fee2e2;
+
+    color: #991b1b;
+}
+
+
+/* ================= ACTION ================= */
+
+.action {
+
+    white-space: nowrap;
+}
+
+.edit-btn,
+.delete-btn {
+
+    display: inline-block;
+
+    padding: 7px 10px;
+
+    border-radius: 7px;
+
+    text-decoration: none;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    margin-right: 4px;
+}
+
+.edit-btn {
+
+    background: #e5edff;
+
+    color: #2563eb;
+}
+
+.edit-btn:hover {
+
+    background: #2563eb;
+
+    color: white;
+}
+
+.delete-btn {
+
+    background: #fee2e2;
+
+    color: #dc2626;
+}
+
+.delete-btn:hover {
+
+    background: #dc2626;
+
+    color: white;
+}
+
+
+/* ================= NO DATA ================= */
+
+.no-data {
+
+    text-align: center;
+
+    padding: 50px 20px !important;
+
+    color: #8a92a5 !important;
+
+    font-size: 14px !important;
+}
+
+
+/* ================= FOOTER ================= */
+
+.footer {
+
+    text-align: center;
+
+    color: #a0a7b7;
+
+    font-size: 10px;
+
+    padding-top: 25px;
+}
+
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 850px) {
+
+    .sidebar {
+
+        width: 210px;
+    }
+
+    .main {
+
+        margin-left: 210px;
+
+        padding-left: 20px;
+
+        padding-right: 20px;
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .sidebar {
+
+        position: relative;
+
+        width: 100%;
+
+        height: auto;
+    }
+
+    .main {
+
+        margin-left: 0;
+
+        padding: 20px 15px;
+    }
+
+    .top-header {
+
+        height: auto;
+
+        padding: 15px 0;
+
+    }
+
+}
+
+</style>
 
 </head>
 
@@ -394,71 +646,208 @@ $result = $conn->query($sql);
 
 <!-- ================= SIDEBAR ================= -->
 
-<div class="sidebar">
+<aside class="sidebar">
 
 
-    <div class="logo">
+    <div class="logo-area">
 
-        Event<span>Hub</span>
+        <div class="logo-icon">
+            📅
+        </div>
 
+        <div class="logo-text">
+
+            <h2>
+                Event<span>Hub</span>
+            </h2>
+
+            <small>
+                Admin Panel
+            </small>
+
+        </div>
+
+    </div>
+
+
+    <div class="menu-title">
+        MAIN MENU
     </div>
 
 
     <a href="index.php">
 
-        📊 Dashboard
+        <span class="nav-icon">⌂</span>
+
+        Dashboard
 
     </a>
 
 
-    <a href="upcoming_events.php">
+    <a href="manage_event.php" class="active">
 
-        🎫 Manage Events
+        <span class="nav-icon">▣</span>
+
+        Manage Events
+
+    </a>
+
+
+    <a href="add_event.php">
+
+        <span class="nav-icon">⊕</span>
+
+        Add Event
 
     </a>
 
 
     <a href="registrations.php">
 
-        👥 Registrations
+        <span class="nav-icon">♟</span>
+
+        Registrations
 
     </a>
 
 
-    <a href="#">
+    <br>
 
-        ⚙️ Settings
 
-    </a>
+    <div class="menu-title">
+        WEBSITE
+    </div>
 
 
     <a href="../index.php">
 
-        🏠 View Website
+        <span class="nav-icon">↗</span>
+
+        View Website
 
     </a>
 
 
-</div>
+    <!-- ADMIN PROFILE -->
+
+    <div style="
+        position:absolute;
+        left:15px;
+        right:15px;
+        bottom:20px;
+        background:rgba(255,255,255,0.055);
+        border:1px solid rgba(255,255,255,0.06);
+        border-radius:13px;
+        padding:13px;
+    ">
+
+        <a href="profile.php"
+           style="
+           padding:0;
+           margin:0;
+           "
+        >
+
+            <div style="
+                display:flex;
+                align-items:center;
+                gap:10px;
+                padding-bottom:12px;
+                border-bottom:1px solid rgba(255,255,255,0.07);
+            ">
+
+                <div style="
+                    width:42px;
+                    height:42px;
+                    min-width:42px;
+                    border-radius:50%;
+                    overflow:hidden;
+                ">
+
+                    <img
+                        src="anuj.jpg"
+                        alt="Anuj Yadav"
+                        style="
+                        width:42px;
+                        height:42px;
+                        object-fit:cover;
+                        display:block;
+                        "
+                    >
+
+                </div>
+
+
+                <div>
+
+                    <strong style="
+                        display:block;
+                        color:white;
+                        font-size:12px;
+                    ">
+                        Anuj Yadav
+                    </strong>
+
+                    <span style="
+                        display:block;
+                        color:#7f8aa2;
+                        font-size:10px;
+                        margin-top:2px;
+                    ">
+                        Administrator
+                    </span>
+
+                </div>
+
+            </div>
+
+        </a>
+
+
+        <a href="logout.php"
+           style="
+           color:#ff6b7d;
+           padding:10px 2px 0;
+           margin:0;
+           font-size:12px;
+           "
+        >
+
+            <span class="nav-icon">
+                ↪
+            </span>
+
+            Logout
+
+        </a>
+
+    </div>
+
+
+</aside>
 
 
 
 <!-- ================= MAIN ================= -->
 
-<div class="main">
+<main class="main">
 
 
-    <div class="topbar">
+    <header class="top-header">
 
-        <h1>
+        <div class="header-title">
 
-            Manage Events
+            <h1>
+                Manage Events
+            </h1>
 
-        </h1>
+            <p>
+                View, edit and manage all events
+            </p>
 
+        </div>
 
-    </div>
-
+    </header>
 
 
     <!-- ADD EVENT -->
@@ -466,10 +855,9 @@ $result = $conn->query($sql);
     <a href="add_event.php"
        class="add-btn">
 
-        + Add New Event
+        ➕ Add New Event
 
     </a>
-
 
 
     <!-- TABLE -->
@@ -477,8 +865,10 @@ $result = $conn->query($sql);
     <div class="table-box">
 
 
-        <table>
+        <?php if ($result && $result->num_rows > 0) { ?>
 
+
+        <table>
 
             <thead>
 
@@ -486,6 +876,10 @@ $result = $conn->query($sql);
 
                     <th>
                         ID
+                    </th>
+
+                    <th>
+                        Image
                     </th>
 
                     <th>
@@ -520,205 +914,223 @@ $result = $conn->query($sql);
             <tbody>
 
 
-                <?php
+            <?php while ($event = $result->fetch_assoc()) { ?>
 
-                if ($result && $result->num_rows > 0) {
 
+                <tr>
 
-                    while ($event = $result->fetch_assoc()) {
 
+                    <!-- ID -->
 
-                ?>
+                    <td class="event-id">
 
+                        <?php
+                        echo htmlspecialchars($event['id']);
+                        ?>
 
-                    <tr>
+                    </td>
 
 
-                        <td>
+                    <!-- IMAGE -->
 
-                            <?php
+                    <td>
 
-                            echo $event['id'];
+                        <?php
 
-                            ?>
+                        if (
+                            isset($event['image']) &&
+                            !empty($event['image'])
+                        ) {
 
-                        </td>
+                        ?>
 
-
-                        <td>
-
-                            <strong>
-
-                                <?php
-
-                                echo htmlspecialchars(
-                                    $event['title']
-                                );
-
-                                ?>
-
-                            </strong>
-
-                        </td>
-
-
-                        <td>
-
-                            <?php
-
-                            echo htmlspecialchars(
-                                $event['date']
-                            );
-
-                            ?>
-
-                        </td>
-
-
-                        <td>
-
-                            <?php
-
-                            echo htmlspecialchars(
-                                $event['location']
-                            );
-
-                            ?>
-
-                        </td>
-
-
-                        <td>
-
-                            <?php
-
-                            echo htmlspecialchars(
-                                $event['description']
-                            );
-
-                            ?>
-
-                        </td>
-
-
-                        <td>
-
-
-                            <?php
-
-                            if (
-                                $event['status']
-                                == 'Active'
-                            ) {
-
-                            ?>
-
-                                <span class="status active">
-
-                                    Active
-
-                                </span>
-
-                            <?php
-
-                            } else {
-
-                            ?>
-
-                                <span class="status inactive">
-
-                                    Inactive
-
-                                </span>
-
-                            <?php
-
-                            }
-
-                            ?>
-
-
-                        </td>
-
-
-                        <td class="action">
-
-
-                            <a
-
-                                href="edit_event.php?id=<?php echo $event['id']; ?>"
-
-                                class="edit"
-
+                            <img
+                                src="../uploads/<?php
+                                    echo htmlspecialchars($event['image']);
+                                ?>"
+                                alt="Event Image"
+                                class="event-image"
                             >
 
-                                ✏️ Edit
+                        <?php
 
-                            </a>
+                        } else {
 
+                        ?>
 
-                            <a
+                            <span style="
+                                color:#9ca3af;
+                                font-size:11px;
+                            ">
+                                No Image
+                            </span>
 
-                                href="delete_event.php?id=<?php echo $event['id']; ?>"
+                        <?php
 
-                                class="delete"
+                        }
 
-                                onclick="return confirm('Are you sure you want to delete this event?');"
+                        ?>
 
-                            >
-
-                                🗑️ Delete
-
-                            </a>
-
-
-                        </td>
-
-
-                    </tr>
+                    </td>
 
 
-                <?php
+                    <!-- TITLE -->
 
-                    }
+                    <td class="event-title">
+
+                        <?php
+                        echo htmlspecialchars($event['title']);
+                        ?>
+
+                    </td>
 
 
-                } else {
+                    <!-- DATE -->
 
-                ?>
+                    <td class="event-date">
+
+                        <?php
+                        echo htmlspecialchars($event['date']);
+                        ?>
+
+                    </td>
 
 
-                    <tr>
+                    <!-- LOCATION -->
 
-                        <td
-                            colspan="7"
-                            class="no-data"
+                    <td class="location">
+
+                        <?php
+                        echo htmlspecialchars($event['location']);
+                        ?>
+
+                    </td>
+
+
+                    <!-- DESCRIPTION -->
+
+                    <td class="description">
+
+                        <?php
+                        echo htmlspecialchars($event['description']);
+                        ?>
+
+                    </td>
+
+
+                    <!-- STATUS -->
+
+                    <td>
+
+                        <?php
+
+                        if (
+                            isset($event['status']) &&
+                            $event['status'] == 'Active'
+                        ) {
+
+                        ?>
+
+                            <span class="status active">
+                                Active
+                            </span>
+
+                        <?php
+
+                        } else {
+
+                        ?>
+
+                            <span class="status inactive">
+                                Inactive
+                            </span>
+
+                        <?php
+
+                        }
+
+                        ?>
+
+                    </td>
+
+
+                    <!-- ACTION -->
+
+                    <td class="action">
+
+
+                        <a
+                            href="edit_event.php?id=<?php
+                                echo urlencode($event['id']);
+                            ?>"
+                            class="edit-btn"
                         >
-
-                            No events found.
-
-                        </td>
-
-                    </tr>
+                            ✏️ Edit
+                        </a>
 
 
-                <?php
+                        <a
+                            href="delete_event.php?id=<?php
+                                echo urlencode($event['id']);
+                            ?>"
+                            class="delete-btn"
+                            onclick="return confirm(
+                                'Are you sure you want to delete this event?'
+                            );"
+                        >
+                            🗑️ Delete
+                        </a>
 
-                }
 
-                ?>
+                    </td>
+
+
+                </tr>
+
+
+            <?php } ?>
 
 
             </tbody>
 
-
         </table>
+
+
+        <?php } else { ?>
+
+
+            <div class="no-data">
+
+                📅
+
+                <br><br>
+
+                <strong>
+                    No Events Found
+                </strong>
+
+                <br><br>
+
+                Add a new event to see it here.
+
+
+            </div>
+
+
+        <?php } ?>
 
 
     </div>
 
 
-</div>
+    <div class="footer">
+
+        EventHub Admin Panel
+
+    </div>
+
+
+</main>
 
 
 </body>

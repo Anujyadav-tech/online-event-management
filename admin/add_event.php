@@ -22,24 +22,17 @@ if (isset($_POST['add_event'])) {
 
         $message = "❌ Image select nahi ki gayi.";
 
-    } 
-    elseif ($_FILES['image']['error'] != 0) {
+    } elseif ($_FILES['image']['error'] != 0) {
 
-        $error = $_FILES['image']['error'];
+        $message = "❌ Image upload error. Error Code: " .
+                   $_FILES['image']['error'];
 
-        $message = "❌ Image upload error. Error Code: " . $error;
-
-    } 
-    else {
+    } else {
 
         $uploadDir = "../uploads/";
 
-        /* Create uploads folder */
-
         if (!is_dir($uploadDir)) {
-
             mkdir($uploadDir, 0777, true);
-
         }
 
         $originalName = $_FILES['image']['name'];
@@ -56,38 +49,32 @@ if (isset($_POST['add_event'])) {
             "webp"
         );
 
-        /* Check file type */
-
         if (!in_array($extension, $allowed)) {
 
-            $message = "❌ Sirf JPG, JPEG, PNG aur WEBP image allowed hai.";
+            $message =
+                "❌ Sirf JPG, JPEG, PNG aur WEBP image allowed hai.";
 
-        } 
-        else {
+        } else {
 
-            /* Create unique image name */
+            $imageName =
+                time() . "_" . uniqid() . "." . $extension;
 
-            $imageName = time() . "_" . uniqid() . "." . $extension;
-
-            $destination = $uploadDir . $imageName;
-
-            /* Move image */
+            $destination =
+                $uploadDir . $imageName;
 
             if (move_uploaded_file($tmpName, $destination)) {
 
-                $message = "✅ Image successfully upload ho gayi.";
+                $message =
+                    "✅ Image successfully upload ho gayi.";
 
-            } 
-            else {
+            } else {
 
-                $message = "❌ Image uploads folder mein save nahi ho paayi.";
+                $message =
+                    "❌ Image uploads folder mein save nahi ho paayi.";
 
                 $imageName = "";
-
             }
-
         }
-
     }
 
 
@@ -115,172 +102,329 @@ if (isset($_POST['add_event'])) {
 
             if ($stmt->execute()) {
 
-                $message = "✅ Event aur image successfully add ho gaye!";
+                $message =
+                    "✅ Event aur image successfully add ho gaye!";
 
-            } 
-            else {
+            } else {
 
-                $message = "❌ Database Error: " . $stmt->error;
-
+                $message =
+                    "❌ Database Error: " . $stmt->error;
             }
 
             $stmt->close();
 
-        } 
-        else {
+        } else {
 
-            $message = "❌ Database Query Error: " . $conn->error;
-
+            $message =
+                "❌ Database Query Error: " . $conn->error;
         }
-
     }
-
 }
 
 ?>
 
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
-    <title>Add Event | EventHub</title>
+<title>Add Event | EventHub</title>
 
-    <style>
+<style>
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
 
-        body {
-            background: #f4f1ff;
-            padding: 40px 20px;
-    
-        }
+body {
 
-        .container {
-            max-width: 650px;
-            margin: auto;
-        }
+    background: #f5f7fc;
 
-        .box {
-            background: white;
-            padding: 35px;
-            border-radius: 15px;
-            box-shadow: 0 10px 35px rgba(0,0,0,0.10);
-    
-        }
+    padding: 35px;
 
-        h1 {
-            text-align: center;
-            color: #281653;
-            margin-bottom: 10px;
-        }
+}
 
-        .subtitle {
-            text-align: center;
-            color: #777;
-            margin-bottom: 30px;
-        }
 
-        .message {
-            padding: 13px;
-            background: #f1edff;
-            color: #4b32c5;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: bold;
-        }
+/* ================= CONTAINER ================= */
 
-        .form-group {
-            margin-bottom: 18px;
-        }
+.container {
 
-        label {
-            display: block;
-            margin-bottom: 7px;
-            font-weight: bold;
-            color: #333;
-            font-size: 14px;
-        }
+    max-width: 750px;
 
-        input,
-        textarea,
-        select {
-            width: 100%;
-            padding: 13px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            outline: none;
-            background: #fafafa;
-        }
+    margin: auto;
 
-        input:focus,
-        textarea:focus,
-        select:focus {
-            border-color: #6042d8;
-        }
+}
 
-        textarea {
-            height: 110px;
-            resize: vertical;
-        }
 
-        .image-note {
-            font-size: 12px;
-            color: #777;
-            margin-top: 6px;
-        }
+/* ================= BOX ================= */
 
-        .btn {
-            width: 100%;
-            border: none;
-            padding: 14px;
-            background: #5940d1;
-            color: white;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
+.box {
 
-        .btn:hover {
-            background: #432bb5;
-        }
+    background: white;
 
-        .back {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            text-decoration: none;
-            color: #5940d1;
-            font-weight: bold;
-        }
+    padding: 35px;
 
-    </style>
+    border-radius: 16px;
+
+    box-shadow:
+        0 8px 30px rgba(30,40,80,0.08);
+
+    border:
+        1px solid #edf0f6;
+
+}
+
+
+/* ================= HEADER ================= */
+
+h1 {
+
+    text-align: center;
+
+    color: #24134f;
+
+    font-size: 27px;
+
+    margin-bottom: 8px;
+
+}
+
+.subtitle {
+
+    text-align: center;
+
+    color: #8a92a5;
+
+    font-size: 13px;
+
+    margin-bottom: 28px;
+
+}
+
+
+/* ================= MESSAGE ================= */
+
+.message {
+
+    padding: 13px;
+
+    background: #f1edff;
+
+    color: #5137c7;
+
+    border-radius: 8px;
+
+    margin-bottom: 20px;
+
+    text-align: center;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+}
+
+
+/* ================= FORM ================= */
+
+.form-group {
+
+    margin-bottom: 18px;
+
+}
+
+label {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-weight: 600;
+
+    color: #303746;
+
+    font-size: 13px;
+
+}
+
+input,
+textarea,
+select {
+
+    width: 100%;
+
+    padding: 13px 14px;
+
+    border:
+        1px solid #dfe3eb;
+
+    border-radius: 8px;
+
+    outline: none;
+
+    background: #fafbfc;
+
+    font-size: 13px;
+
+    transition: 0.2s;
+
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+
+    border-color: #6346df;
+
+    background: white;
+
+    box-shadow:
+        0 0 0 3px rgba(99,70,223,0.08);
+
+}
+
+textarea {
+
+    min-height: 110px;
+
+    resize: vertical;
+
+}
+
+
+/* ================= IMAGE ================= */
+
+input[type="file"] {
+
+    padding: 10px;
+
+    background: #fafbfc;
+
+}
+
+.image-note {
+
+    margin-top: 6px;
+
+    color: #8a92a5;
+
+    font-size: 11px;
+
+}
+
+
+/* ================= BUTTON ================= */
+
+.btn {
+
+    width: 100%;
+
+    border: none;
+
+    padding: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #5d45dc,
+            #7339e8
+        );
+
+    color: white;
+
+    border-radius: 8px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    margin-top: 8px;
+
+    transition: 0.25s;
+
+}
+
+.btn:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 20px rgba(91,64,220,0.25);
+
+}
+
+
+/* ================= BACK ================= */
+
+.back {
+
+    display: block;
+
+    text-align: center;
+
+    margin-top: 20px;
+
+    text-decoration: none;
+
+    color: #5d45dc;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+}
+
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:700px) {
+
+    body {
+
+        padding: 15px;
+
+    }
+
+    .box {
+
+        padding: 25px 20px;
+
+    }
+
+}
+
+</style>
 
 </head>
 
+
 <body>
+
 
 <div class="container">
 
+
     <div class="box">
 
-        <h1>➕ ADD NEW EVENT</h1>
+
+        <h1>
+            ➕ ADD NEW EVENT
+        </h1>
+
 
         <p class="subtitle">
-            
+            Create and publish a new event
         </p>
 
 
@@ -304,7 +448,7 @@ if (isset($_POST['add_event'])) {
             <div class="form-group">
 
                 <label>
-                    Event Title
+                    🎯 Event Title
                 </label>
 
                 <input
@@ -322,7 +466,7 @@ if (isset($_POST['add_event'])) {
             <div class="form-group">
 
                 <label>
-                    Description
+                    📝 Description
                 </label>
 
                 <textarea
@@ -339,7 +483,7 @@ if (isset($_POST['add_event'])) {
             <div class="form-group">
 
                 <label>
-                    Event Date
+                    📅 Event Date
                 </label>
 
                 <input
@@ -356,7 +500,7 @@ if (isset($_POST['add_event'])) {
             <div class="form-group">
 
                 <label>
-                    Location
+                    📍 Location
                 </label>
 
                 <input
@@ -368,15 +512,19 @@ if (isset($_POST['add_event'])) {
 
             </div>
 
+
             <!-- STATUS -->
 
             <div class="form-group">
 
                 <label>
-                    Status
+                    🟢 Status
                 </label>
 
-                <select name="status" required>
+                <select
+                    name="status"
+                    required
+                >
 
                     <option value="Active">
                         Active
@@ -396,7 +544,7 @@ if (isset($_POST['add_event'])) {
             <div class="form-group">
 
                 <label>
-                    Event Image
+                    🖼️ Event Image
                 </label>
 
                 <input
@@ -407,7 +555,7 @@ if (isset($_POST['add_event'])) {
                 >
 
                 <p class="image-note">
-                
+                    JPG, JPEG, PNG aur WEBP images allowed hain.
                 </p>
 
             </div>
@@ -420,8 +568,11 @@ if (isset($_POST['add_event'])) {
                 name="add_event"
                 class="btn"
             >
+
                 ➕ ADD EVENT
+
             </button>
+
 
         </form>
 
@@ -430,12 +581,16 @@ if (isset($_POST['add_event'])) {
             href="index.php"
             class="back"
         >
+
             ← Back to Dashboard
+
         </a>
+
 
     </div>
 
 </div>
+
 
 </body>
 

@@ -1,5 +1,8 @@
 <?php
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 session_start();
 
 include "../config.php";
@@ -8,42 +11,57 @@ $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $email = trim($_POST["email"]);
-    $password = $_POST["password"];
+    $email = trim($_POST["email"] ?? "");
+    $password = $_POST["password"] ?? "";
 
-    $stmt = $conn->prepare(
-        "SELECT id, email, password FROM admins WHERE email = ?"
-    );
+    if (empty($email) || empty($password)) {
 
-    $stmt->bind_param("s", $email);
-
-    $stmt->execute();
-
-    $result = $stmt->get_result();
-
-    if ($result->num_rows == 1) {
-
-        $admin = $result->fetch_assoc();
-
-        if (password_verify($password, $admin["password"])) {
-
-            $_SESSION["admin_logged_in"] = true;
-            $_SESSION["admin_id"] = $admin["id"];
-            $_SESSION["admin_email"] = $admin["email"];
-
-            header("Location: index.php");
-            exit();
-
-        } else {
-
-            $error = "Invalid email or password.";
-
-        }
+        $error = "Please enter email and password.";
 
     } else {
 
-        $error = "Invalid email or password.";
+        $stmt = $conn->prepare(
+            "SELECT id, email, password FROM admins WHERE email = ?"
+        );
 
+        if (!$stmt) {
+
+            $error = "Database error: " . $conn->error;
+
+        } else {
+
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+
+            $result = $stmt->get_result();
+
+            if ($result->num_rows == 1) {
+
+                $admin = $result->fetch_assoc();
+
+                if (password_verify($password, $admin["password"])) {
+
+                    $_SESSION["admin_logged_in"] = true;
+                    $_SESSION["admin_id"] = $admin["id"];
+                    $_SESSION["admin_email"] = $admin["email"];
+
+                    header("Location: index.php");
+                    exit();
+
+                } else {
+
+                    $error = "Invalid email or password.";
+
+                }
+
+            } else {
+
+                $error = "Invalid email or password.";
+
+            }
+
+            $stmt->close();
+        }
     }
 }
 
@@ -56,8 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Admin Login | EventHub</title>
 
@@ -75,43 +92,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             display: flex;
             align-items: center;
             justify-content: center;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #111827,
-                    #4f46e5
-                );
-
+            background: linear-gradient(135deg, #111827, #4f46e5);
             padding: 20px;
         }
 
         .login-container {
-
             width: 100%;
             max-width: 420px;
-
             background: white;
-
             padding: 40px;
-
             border-radius: 20px;
-
-            box-shadow:
-                0 20px 50px rgba(0,0,0,0.25);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
         }
 
         .logo {
-
             text-align: center;
-
             font-size: 30px;
-
             font-weight: bold;
-
             color: #5b4bdb;
-
-            margin-bottom: 8px;
+            margin-bottom: 25px;
         }
 
         .logo span {
@@ -119,25 +118,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .login-title {
-
             text-align: center;
-
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         .login-title h2 {
-
             color: #111827;
-
             font-size: 25px;
-
             margin-bottom: 7px;
         }
 
         .login-title p {
-
             color: #6b7280;
-
             font-size: 13px;
         }
 
@@ -146,117 +138,66 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .form-group label {
-
             display: block;
-
             margin-bottom: 7px;
-
             color: #374151;
-
             font-size: 14px;
-
             font-weight: 600;
         }
 
         .form-group input {
-
             width: 100%;
-
             padding: 13px;
-
             border: 1px solid #d1d5db;
-
             border-radius: 9px;
-
             background: #f9fafb;
-
             font-size: 14px;
-
             outline: none;
-
-            transition: 0.3s;
         }
 
         .form-group input:focus {
-
             border-color: #6366f1;
-
             background: white;
-
-            box-shadow:
-                0 0 0 3px
-                rgba(99,102,241,0.12);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
         }
 
         .login-btn {
-
             width: 100%;
-
             padding: 13px;
-
             border: none;
-
             border-radius: 9px;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #5b4bdb,
-                    #7665ed
-                );
-
+            background: linear-gradient(135deg, #5b4bdb, #7665ed);
             color: white;
-
             font-size: 15px;
-
             font-weight: bold;
-
             cursor: pointer;
-
             transition: 0.3s;
         }
 
         .login-btn:hover {
-
             transform: translateY(-2px);
-
-            box-shadow:
-                0 8px 20px
-                rgba(91,75,219,0.30);
+            box-shadow: 0 8px 20px rgba(91,75,219,0.30);
         }
 
         .error {
-
             background: #fee2e2;
-
             color: #b91c1c;
-
-            padding: 10px;
-
+            padding: 12px;
             border-radius: 8px;
-
             font-size: 13px;
-
             text-align: center;
-
             margin-bottom: 18px;
         }
 
         .forgot {
-
             text-align: right;
-
             margin-top: -8px;
-
             margin-bottom: 20px;
         }
 
         .forgot a {
-
             color: #6366f1;
-
             text-decoration: none;
-
             font-size: 13px;
         }
 
@@ -265,18 +206,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .back-link {
-
             text-align: center;
-
             margin-top: 20px;
         }
 
         .back-link a {
-
             color: #6366f1;
-
             text-decoration: none;
-
             font-size: 13px;
         }
 
@@ -290,33 +226,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <body>
 
-
 <div class="login-container">
-
 
     <div class="logo">
         Event<span>Hub</span>
     </div>
 
-
     <div class="login-title">
 
-    </div>
+        <h2>Admin Login</h2>
 
+        <p>Login to manage your events</p>
+
+    </div>
 
     <?php if ($error != "") { ?>
 
         <div class="error">
-
             <?php echo htmlspecialchars($error); ?>
-
         </div>
 
     <?php } ?>
 
-
     <form method="POST">
-
 
         <div class="form-group">
 
@@ -329,11 +261,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 id="email"
                 name="email"
                 placeholder="Enter admin email"
+                value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
                 required
             >
 
         </div>
-
 
         <div class="form-group">
 
@@ -351,7 +283,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         </div>
 
-
         <div class="forgot">
 
             <a href="forgot_password.php">
@@ -360,17 +291,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         </div>
 
-
         <button
             type="submit"
             class="login-btn"
         >
-            Login 
+            Login
         </button>
 
-
     </form>
-
 
     <div class="back-link">
 
@@ -380,9 +308,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     </div>
 
-
 </div>
-
 
 </body>
 
